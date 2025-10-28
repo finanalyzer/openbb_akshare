@@ -8,7 +8,7 @@ readme = "README.md"
 packages = [{ include = "openbb_akshare" }]
 
 [tool.poetry.dependencies]
-python = ">=3.9.21,<3.13"
+python = ">=3.11,<3.13"
 akshare = "1.17.39"
 openbb-core = { version = "^1.4.7" }
 mysharelib = "^0.4.5"
@@ -17,6 +17,7 @@ ipywidgets = "^8.1.7"
 [tool.poetry.group.dev.dependencies]
 openbb-devtools = { version = "^1.0.0" }
 ipykernel = "^6.30.1"
+openbb-fmp = "^1.5.1"
 
 [build-system]
 requires = ["poetry-core"]

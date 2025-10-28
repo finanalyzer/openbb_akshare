@@ -316,3 +316,64 @@ def get_hk_dividends(
         raise EmptyDataError(f"No dividend data found for {symbol}.")
 
     return dividends
+
+def convert_stock_code_format(symbol):
+    # 将.SS转换为SH前缀 .SZ后缀转换为SZ前缀
+    # 如果没有后缀，根据代码判断市场：6开头为SH，0/3开头为SZ，8开头为BJ
+    symbol = symbol.split(",")
+    symbol = [s.strip() for s in symbol if s.strip()]
+    converted_symbol = []
+    for s in symbol:
+        if ".SS" in s:
+            s = "SH" + s.replace(".SS", "")
+        elif ".SZ" in s:
+            s = "SZ" + s.replace(".SZ", "")
+        elif ".OF" in s:
+            s = "OF" + s.replace(".OF", "")
+        elif s.startswith("SH") or s.startswith("SZ") or s.startswith("BJ") or s.startswith("OF"):
+            # 已经有前缀，不需要转换
+            pass
+        else:
+            # 根据代码开头判断市场
+            if s.startswith("6") or s.startswith("9"):
+                s = "SH" + s
+            elif s.startswith("0") or s.startswith("3"):
+                s = "SZ" + s
+            elif s.startswith("8") or s.startswith("4"):
+                s = "BJ" + s
+        converted_symbol.append(s)
+
+    return ",".join(converted_symbol)
+
+def ak_fund_portfolio_hold_em(
+    symbol: str, year: str, db_path: str, use_cache: bool = True
+) -> DataFrame:
+    """Fetch data with custom cache key."""
+    import akshare as ak
+    from openbb_akshare.utils.sqlite_cache import SQLiteCache
+    from openbb_core.app.utils import get_user_cache_directory
+
+    symbols_str = symbol + year
+    if use_cache:
+        cache_db_path = f"{get_user_cache_directory()}/ddb/{db_path}.db"
+        cache = SQLiteCache(
+            db_path=cache_db_path, expire=24 * 3600 * 2
+        )  # 创建缓存实例，缓存有效期为两天
+        cache.clear_expired()
+        df = cache.get(symbols_str)
+        if isinstance(df, DataFrame):
+            return df
+        else:
+            try:
+                df: DataFrame = ak.fund_portfolio_hold_em(symbol=symbol, date=year)
+            except Exception:
+                df = DataFrame()
+            cache.set(symbols_str, df)
+            return df
+    else:
+        # 如果不使用缓存，直接发起请求
+        try:
+            df: DataFrame = ak.fund_portfolio_hold_em(symbol=symbol, date=year)
+        except Exception:
+            df = DataFrame()
+        return df
