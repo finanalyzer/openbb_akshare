@@ -82,3 +82,39 @@ async def model_example(
 ) -> OBBject[BaseModel]:
     """Example Data."""
     return await OBBject.from_query(Query(**locals()))
+
+
+# pylint: disable=unused-argument
+@router.command(model="BusinessAnalysis")
+async def business_analysis(
+    cc: CommandContext,
+    provider_choices: ProviderChoices,
+    standard_params: StandardParams,
+    extra_params: ExtraParams,
+) -> OBBject[BaseModel]:
+    """Get business analysis data."""
+    return await OBBject.from_query(Query(**locals()))
+
+
+# pylint: disable=unused-argument
+@router.command(model="EtfHoldings")
+async def etf_holdings(
+    cc: CommandContext,
+    provider_choices: ProviderChoices,
+    standard_params: StandardParams,
+    extra_params: ExtraParams,
+) -> OBBject[BaseModel]:
+    """Get ETF holdings data."""
+    return await OBBject.from_query(Query(**locals()))
+
+
+# pylint: disable=unused-argument
+@router.command(model="FundHoldings")
+async def fund_holdings(
+    cc: CommandContext,
+    provider_choices: ProviderChoices,
+    standard_params: StandardParams,
+    extra_params: ExtraParams,
+) -> OBBject[BaseModel]:
+    """Get fund holdings data."""
+    return await OBBject.from_query(Query(**locals()))
