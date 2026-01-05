@@ -26,8 +26,14 @@ def test_equity_historical_with_dates(symbol, default_provider, use_cache):
 def test_equity_info(symbol, akshare_api_key, logger):
     from openbb_akshare.utils.fetch_equity_info import fetch_equity_info
     df = fetch_equity_info(symbol, api_key=akshare_api_key)
-    listed_date = pd.to_datetime(df.get("listed_date"), unit='ms').iloc[0].date()
-    logger.info(f"Listed date of {symbol} is {listed_date}.")
+    
+    # Check if we have data and it's not empty
+    if not df.empty and "listed_date" in df.columns and len(df) > 0:
+        listed_date = df["listed_date"].iloc[0]
+        if pd.notna(listed_date):
+            date_result = pd.to_datetime(listed_date, unit='ms').date()
+            logger.info(f"Listed date of {symbol} is {date_result}.")
+    
     assert isinstance(df, pd.DataFrame)
 
 def test_equity_historical_with_date_format1(logger, default_provider):

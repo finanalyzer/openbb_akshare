@@ -119,7 +119,25 @@ def get_data(symbol: str, period: Literal["annual", "quarter"] = "annual", use_c
     from mysharelib.blob_cache import BlobCache
     cache = BlobCache(table_name="balance_sheet", project=project_name)
     logger.info(f"Fetching balance sheet data for {symbol} with limit {limit} and use_cache={use_cache}")
-    return cache.load_cached_data(symbol, period, use_cache, get_ak_data, api_key, limit)
+    
+    try:
+        data = cache.load_cached_data(symbol, period, use_cache, get_ak_data, api_key, limit)
+    except NotImplementedError:
+        logger.warning("Cached data contained pandas extension dtypes that could not be unpickled; refreshing cache.")
+        # Try again without using cache so we regenerate a fresh, safe cache entry
+        data = cache.load_cached_data(symbol, period, False, get_ak_data, api_key, limit)
+
+    if data is None:
+        return pd.DataFrame()
+
+    # Ensure loaded DataFrame has no pandas extension dtypes (e.g., StringDtype)
+    if isinstance(data, pd.DataFrame):
+        for col in data.columns:
+            if pd.api.types.is_extension_array_dtype(data[col].dtype):
+                data[col] = data[col].astype(object)
+        data.index = data.index.astype(object)
+
+    return data
 
 def get_ak_data(symbol: str, period: Literal["annual", "quarter"] = "annual", api_key : Optional[str] = "", limit:int = 5) -> pd.DataFrame:
     from openbb_akshare.utils.ak_balance_sheet import ak_stock_balance_sheet

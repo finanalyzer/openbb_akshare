@@ -45,12 +45,22 @@ def get_list_date(symbol: str, api_key: Optional[str] = "") -> dateType:
     from openbb_akshare.utils.fetch_equity_info import fetch_equity_info
 
     equity_info = fetch_equity_info(symbol, api_key=api_key)
-    listed_date = equity_info.get("listed_date")
-   
-    if listed_date is not None:
-        logger.info(f"Listing date for {symbol} is {listed_date}.")
-        return pd.to_datetime(listed_date, unit='ms').iloc[0].date()
     
+    # Check if we have data and it's not empty
+    if not equity_info.empty and "listed_date" in equity_info.columns:
+        listed_date = equity_info["listed_date"].iloc[0] if len(equity_info) > 0 else None
+        
+        if listed_date is not None and pd.notna(listed_date):
+            logger.info(f"Listing date for {symbol} is {listed_date}.")
+            # Handle both Series and scalar cases
+            datetime_result = pd.to_datetime(listed_date, unit='ms')
+            if isinstance(datetime_result, pd.Series):
+                return datetime_result.iloc[0].date()
+            else:
+                return datetime_result.date()
+    
+    # Fallback to 1 year ago if no listing date found
+    logger.warning(f"No listing date found for {symbol}, using fallback date.")
     return (datetime.now() - timedelta(days=365)).date()
 
 def check_cache(symbol: str, 

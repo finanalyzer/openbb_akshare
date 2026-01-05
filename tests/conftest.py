@@ -1,5 +1,7 @@
+import os
 import logging
 import pytest
+from dotenv import load_dotenv
 from mysharelib.tools import setup_logger, normalize_symbol
 from openbb_akshare import project_name
 
