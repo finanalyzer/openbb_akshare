@@ -63,7 +63,7 @@ class AKShareEquitySearchFetcher(
         from openbb_akshare.utils.ak_equity_search import get_symbols
         api_key = credentials.get("akshare_api_key") if credentials else ""
         data = get_symbols(query.use_cache, api_key=api_key)
-        if query.limit: data = data.head(query.limit)
+        if query.limit is not None and query.limit > 0: data = data.head(query.limit)
 
         return data.to_dict(orient="records")
 

@@ -101,12 +101,13 @@ class AKShareCashFlowStatementFetcher(
         """Extract the data from the AKShare endpoints."""
         # pylint: disable=import-outside-toplevel
         api_key = credentials.get("akshare_api_key") if credentials else ""
-        em_df = get_data(query.symbol, query.period, query.use_cache, api_key=api_key, limit=query.limit)
+        limit = query.limit if query.limit is not None else 5
+        em_df = get_data(query.symbol, query.period, query.use_cache, api_key=api_key, limit=limit)
 
-        if query.limit is None:
+        if limit is None:
             return em_df.to_dict(orient="records")
         else:
-            return em_df.head(query.limit).to_dict(orient="records")
+            return em_df.head(limit).to_dict(orient="records")
 
     @staticmethod
     def transform_data(
@@ -122,25 +123,7 @@ def get_data(symbol: str, period: Literal["annual", "quarter"] = "annual", use_c
     from mysharelib.blob_cache import BlobCache
     cache = BlobCache(table_name="cash_flow", project=project_name)
     logger.info(f"Fetching cash flow data for {symbol} with limit {limit} and use_cache={use_cache}")
-    
-    try:
-        data = cache.load_cached_data(symbol, period, use_cache, get_ak_data, api_key, limit)
-    except NotImplementedError:
-        logger.warning("Cached data contained pandas extension dtypes that could not be unpickled; refreshing cache.")
-        # Try again without using cache so we regenerate a fresh, safe cache entry
-        data = cache.load_cached_data(symbol, period, False, get_ak_data, api_key, limit)
-
-    if data is None:
-        return pd.DataFrame()
-
-    # Ensure loaded DataFrame has no pandas extension dtypes (e.g., StringDtype)
-    if isinstance(data, pd.DataFrame):
-        for col in data.columns:
-            if pd.api.types.is_extension_array_dtype(data[col].dtype):
-                data[col] = data[col].astype(object)
-        data.index = data.index.astype(object)
-
-    return data
+    return cache.load_cached_data(symbol, period, use_cache, get_ak_data, api_key, limit)
 
 def get_ak_data(symbol: str, period: Literal["annual", "quarter"] = "annual", api_key : Optional[str] = "", limit:int = 5) -> pd.DataFrame:
     from openbb_akshare.utils.ak_cash_flow import ak_stock_cash_flow
