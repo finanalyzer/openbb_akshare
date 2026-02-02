@@ -167,3 +167,6 @@ cython_debug/
 
 # VS Code project settings
 .vscode/
+
+# Linux
+arms_cache/

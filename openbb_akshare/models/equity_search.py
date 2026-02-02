@@ -74,11 +74,19 @@ class AKShareEquitySearchFetcher(
         """Transform the data to the standard format."""
 
         if query.query:
+            # Remove exchange suffixes if the query is a symbol
+            search_query = query.query
+            suffixes = [".SS", ".SH", ".HK", ".BJ", ".SZ"]
+            for suffix in suffixes:
+                if search_query.endswith(suffix):
+                    search_query = search_query[:-len(suffix)]
+                    break
+            
             filtered = [
                 d for d in data
-                if query.query in d.get('name', '') or query.query in d.get('symbol', '')
+                if search_query in d.get('name', '') or search_query in d.get('symbol', '')
             ]
-            logger.info(f"Searching for {query.query} and found {len(filtered)} results.")
+            logger.info(f"Searching for {search_query} and found {len(filtered)} results.")
             return [AKShareEquitySearchData.model_validate(d) for d in filtered]
 
         return [AKShareEquitySearchData.model_validate(d) for d in data]
