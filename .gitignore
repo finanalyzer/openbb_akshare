@@ -170,3 +170,7 @@ cython_debug/
 
 # Linux
 arms_cache/
+
+# AI skills
+.github/
+.qoder/
