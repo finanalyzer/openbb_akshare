@@ -41,8 +41,13 @@ class AKShareEquityQuoteData(EquityQuoteData):
         "low": "最低",
         "prev_close": "昨收",
         "volume": "成交量",
+        "turnover": "成交额",
         "change": "涨跌额",
         "change_percent": "涨跌幅",
+        "amplitude": "振幅",
+        "turnover_rate": "换手率",
+        "pe_ratio": "市盈率",
+        "pb_ratio": "市净率",
     }
 
 
@@ -64,27 +69,44 @@ class AKShareEquityQuoteFetcher(
     ) -> List[Dict]:
         """Extract the raw data from AKShare."""
         # pylint: disable=import-outside-toplevel
-        import akshare as ak
         import pandas as pd
+
+        api_key = credentials.get("akshare_api_key", "") if credentials else ""
 
         symbols = query.symbol.split(",")
         all_data = []
 
-        def get_one(symbol, use_cache) -> pd.DataFrame:
+        if not api_key:
+            logger.error("AKShare requires an API key.")
+            return all_data
+
+        def get_one(symbol, api_key: str, use_cache) -> pd.DataFrame:
             """Get the data for one ticker symbol."""
-            from openbb_akshare.utils.fetch_quote import load_cached_data
             quote = pd.DataFrame()
             symbol_b, symbol_f, market = normalize_symbol(symbol)
-            stock_quotes = load_cached_data(market, use_cache)
-            quote = stock_quotes[stock_quotes["代码"] == symbol]
 
-            if quote.empty:
+            if market == "HK":
+                symbol_xq = symbol_b
+            else:
+                symbol_xq = f"{market}{symbol_b}"
+
+            logger.info(f"Fetching data for symbol: {symbol_xq}")
+
+            import akshare as ak
+
+            ak.stock.cons.xq_a_token = api_key
+            stock_individual_spot_xq_df = ak.stock_individual_spot_xq(symbol=symbol_xq)
+
+            if stock_individual_spot_xq_df.empty:
                 return pd.DataFrame([{"symbol": symbol, "error": "Symbol not found"}])
-            return quote
+            else:
+                data = stock_individual_spot_xq_df.set_index("item")
+                #logger.info(f"Fetched data for symbol: {data}")
+                return data.T
 
         for symbol in symbols:
             try:        
-                data = get_one(symbol, query.use_cache)
+                data = get_one(symbol, api_key=api_key, use_cache=query.use_cache)
                 all_data.append(data.to_dict(orient="records")[0])
                 
             except Exception as e:

@@ -164,6 +164,8 @@ class AKShareEquityProfileFetcher(
         from openbb_core.provider.utils.errors import EmptyDataError
         from warnings import warn
 
+        api_key = credentials.get("akshare_api_key", "") if credentials else ""
+
         symbols = query.symbol.split(",")
         results = []
         messages: list = []
@@ -181,7 +183,7 @@ class AKShareEquityProfileFetcher(
                     f"Error getting data for {symbol} -> {e.__class__.__name__}: {e}"
                 )
 
-        tasks = [get_one(symbol, api_key=None, use_cache=query.use_cache) for symbol in symbols]
+        tasks = [get_one(symbol, api_key=api_key, use_cache=query.use_cache) for symbol in symbols]
 
         await asyncio.gather(*tasks)
 
