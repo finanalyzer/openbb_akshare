@@ -7,6 +7,7 @@ from openbb_akshare.models.available_indices import AKShareAvailableIndicesFetch
 from openbb_akshare.models.balance_sheet import AKShareBalanceSheetFetcher
 from openbb_akshare.models.cash_flow import AKShareCashFlowStatementFetcher
 from openbb_akshare.models.company_news import AKShareCompanyNewsFetcher
+from openbb_akshare.models.country_interest_rates import AKShareCountryInterestRatesFetcher
 from openbb_akshare.models.currency_historical import AKShareCurrencyHistoricalFetcher
 from openbb_akshare.models.currency_snapshots import AKShareCurrencySnapshotsFetcher
 from openbb_akshare.models.equity_quote import AKShareEquityQuoteFetcher
@@ -37,6 +38,7 @@ provider = Provider(
         "BalanceSheet": AKShareBalanceSheetFetcher,
         "CashFlowStatement": AKShareCashFlowStatementFetcher,
         "CompanyNews": AKShareCompanyNewsFetcher,
+        "CountryInterestRates": AKShareCountryInterestRatesFetcher,
         "CurrencyHistorical": AKShareCurrencyHistoricalFetcher,
         "CurrencySnapshots": AKShareCurrencySnapshotsFetcher,
         "EquityQuote": AKShareEquityQuoteFetcher,
